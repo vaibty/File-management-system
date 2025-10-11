@@ -1,0 +1,29 @@
+<div class="file-item" [class.grid-item]="viewMode === 'grid'" [class.list-item]="viewMode === 'list'"
+  [class.folder]="item.isFolder" [class.file]="!item.isFolder" (click)="onItemClick()"
+  (contextmenu)="onDownload($event)">
+
+  <div class="item-icon">
+    <span class="icon">{{ getFileIcon() }}</span>
+  </div>
+
+  <div class="item-content">
+    <div class="item-name" [title]="item.name">
+      {{ item.name }}
+    </div>
+
+    <div class="item-details" *ngIf="viewMode === 'list'">
+      <span class="item-size" *ngIf="!item.isFolder">
+        {{ formatFileSize(item.size) }}
+      </span>
+      <span class="item-date">
+        {{ formatDate(item.modified) }}
+      </span>
+    </div>
+  </div>
+
+  <div class="item-actions" *ngIf="viewMode === 'list'">
+    <button class="action-btn download-btn" (click)="onDownload($event)" title="Download">
+      ⬇️
+    </button>
+  </div>
+</div>

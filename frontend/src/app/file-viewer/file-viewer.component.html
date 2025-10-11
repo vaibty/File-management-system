@@ -1,0 +1,49 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ file.name }}</h2>
+      <div class="modal-header-actions">
+        <button class="btn btn-outline btn-sm" (click)="onDownload()" title="Download file">
+          ⬇️ Download
+        </button>
+        <button class="modal-close" (click)="onClose()" title="Close">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading file content...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !loading" class="error-state">
+        <p class="error-message">{{ error }}</p>
+        <button class="btn btn-primary" (click)="loadFileContent()">
+          Retry
+        </button>
+      </div>
+
+      <!-- File Content -->
+      <div *ngIf="!loading && !error" class="file-content">
+        <div *ngIf="isTextFile()" class="text-content">
+          <pre><code>{{ formatContent() }}</code></pre>
+        </div>
+
+        <div *ngIf="!isTextFile()" class="binary-content">
+          <div class="binary-info">
+            <p>This file type cannot be displayed in the browser.</p>
+            <p>File size: {{ formatFileSize(file.size) }}</p>
+            <p>File type: {{ getFileType() }}</p>
+            <button class="btn btn-primary" (click)="onDownload()">
+              Download File
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

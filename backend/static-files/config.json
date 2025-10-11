@@ -1,0 +1,23 @@
+{
+  "server": {
+    "port": 3001,
+    "host": "localhost",
+    "environment": "production"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "test_dashboard",
+    "user": "admin"
+  },
+  "logging": {
+    "level": "info",
+    "file": "application.log"
+  },
+  "security": {
+    "maxFileSize": "10MB",
+    "allowedOrigins": [
+      "http://localhost:4200"
+    ]
+  }
+}

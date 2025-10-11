@@ -1,0 +1,82 @@
+<div class="file-browser">
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <h1 class="app-title">{{ title }}</h1>
+        <div class="header-actions">
+          <button class="btn btn-outline" (click)="toggleViewMode()"
+            [title]="viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'">
+            <span class="view-icon">{{ viewMode === 'grid' ? '☰' : '⊞' }}</span>
+            {{ viewMode === 'grid' ? 'List' : 'Grid' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div class="file-browser-container">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs">
+          <button class="breadcrumb-item" (click)="navigateToPath('/')" [class.active]="currentPath === '/'">
+            Root
+          </button>
+          <span class="breadcrumb-separator" *ngIf="currentPath !== '/'">/</span>
+          <ng-container *ngFor="let segment of getBreadcrumbs(); let i = index">
+            <button class="breadcrumb-item" (click)="navigateToPath('/' + getBreadcrumbs().slice(0, i + 1).join('/'))"
+              [class.active]="i === getBreadcrumbs().length - 1">
+              {{ segment }}
+            </button>
+            <span class="breadcrumb-separator" *ngIf="i < getBreadcrumbs().length - 1">/</span>
+          </ng-container>
+        </nav>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Search current folder..." [value]="searchQuery"
+            (input)="onSearchChange($event)">
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+          <!-- Loading State -->
+          <div *ngIf="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading directory contents...</p>
+          </div>
+
+          <!-- Error State -->
+          <div *ngIf="error && !loading" class="error-state">
+            <p class="error-message">{{ error }}</p>
+            <button class="btn btn-primary" (click)="loadDirectory(currentPath)">
+              Retry
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!loading && !error && getFilteredItems().length === 0" class="empty-state">
+            <p *ngIf="searchQuery">No items found matching "{{ searchQuery }}"</p>
+            <p *ngIf="!searchQuery">This directory is empty</p>
+          </div>
+
+          <!-- File/Folder Grid -->
+          <div *ngIf="!loading && !error && getFilteredItems().length > 0" class="items-container"
+            [class.grid-view]="viewMode === 'grid'" [class.list-view]="viewMode === 'list'">
+
+            <app-file-item *ngFor="let item of getFilteredItems()" [item]="item" [viewMode]="viewMode"
+              (navigate)="navigateToFolder($event)" (openFile)="openFile($event)" (download)="downloadItem($event)">
+            </app-file-item>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- File Viewer Modal -->
+  <app-file-viewer *ngIf="showFileViewer && selectedFile" [file]="selectedFile" (close)="closeFileViewer()"
+    (download)="downloadItem($event)">
+  </app-file-viewer>
+</div>

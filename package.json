@@ -1,0 +1,25 @@
+{
+  "name": "test-report-dashboard",
+  "version": "1.0.0",
+  "description": "A unified interface for browsing test logs and results from internal testing pipelines",
+  "main": "index.js",
+  "scripts": {
+    "start": "docker-compose up --build",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run start",
+    "test": "./test_dashboard.sh"
+  },
+  "keywords": [
+    "test-dashboard",
+    "file-browser",
+    "angular",
+    "nodejs",
+    "express"
+  ],
+  "author": "Test Report Dashboard Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
