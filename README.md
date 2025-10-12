@@ -42,12 +42,17 @@ The Test Report Dashboard addresses the challenge of accessing and analyzing tes
 - **Modern UI**: Clean, professional interface with smooth animations
 
 ### Backend Features
+- **Fastify Framework**: High-performance web framework with built-in validation
+- **TypeBox Validation**: JSON Schema validation for request/response data
+- **Swagger/OpenAPI Documentation**: Interactive API documentation at `/api/docs`
+- **Modular Architecture**: Separate route files for better organization
 - **Fabricated File System**: Creates realistic test data structure on startup
 - **RESTful API**: Well-structured endpoints for all frontend operations
 - **File Operations**: Support for listing, reading, and downloading files/directories
-- **Error Handling**: Comprehensive error handling with meaningful messages
+- **Error Handling**: Comprehensive error handling with custom error classes
 - **Security**: Path validation to prevent directory traversal attacks
 - **Health Monitoring**: Health check endpoints for service monitoring
+- **Structured Logging**: Enhanced logging with Pino for better debugging
 
 ## Architecture
 
@@ -76,11 +81,15 @@ The application follows a microservices architecture with clear separation of co
 - `FileViewerComponent`: Modal component for viewing file contents
 - Services: HTTP client for API communication
 
-**Backend (Node.js/Express)**:
-- Express server with middleware for CORS and JSON parsing
+**Backend (Node.js/Fastify)**:
+- Fastify server with built-in validation and serialization
+- TypeBox schemas for request/response validation
+- Modular route structure with separate route files per controller
 - File system fabrication service
 - API route handlers for file operations
 - Archiver integration for ZIP creation
+- Swagger/OpenAPI documentation generation
+- Structured logging with Pino
 
 ## Technology Stack
 
@@ -93,10 +102,14 @@ The application follows a microservices architecture with clear separation of co
 
 ### Backend
 - **Node.js 18**: JavaScript runtime
-- **Express.js**: Web application framework
+- **Fastify**: High-performance web framework
+- **TypeBox**: JSON Schema validation
+- **@fastify/swagger**: OpenAPI documentation
+- **@fastify/swagger-ui**: Interactive API documentation
+- **@fastify/cors**: Cross-origin resource sharing
+- **Pino**: Structured logging
 - **Archiver**: ZIP file creation
 - **fs-extra**: Enhanced file system operations
-- **CORS**: Cross-origin resource sharing
 
 ### DevOps & Deployment
 - **Docker**: Containerization
@@ -128,6 +141,7 @@ The application follows a microservices architecture with clear separation of co
 3. **Access the application**:
    - Frontend: http://localhost:4200
    - Backend API: http://localhost:3001
+   - API Documentation: http://localhost:3001/api/docs
 
 ### Development Setup
 
@@ -167,6 +181,13 @@ If you prefer to run without Docker:
    ```
 
 ## API Documentation
+
+### Interactive Documentation
+Visit **http://localhost:3001/api/docs** for the complete interactive Swagger UI documentation with:
+- Request/response examples
+- Schema validation details
+- Try-it-out functionality
+- Automatic OpenAPI specification generation
 
 ### Base URL
 ```
@@ -253,25 +274,63 @@ Returns the health status of the backend service.
 ```json
 {
   "status": "OK",
-  "timestamp": "2024-01-15T10:30:00.000Z"
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "uptime": 12345,
+  "version": "1.0.0",
+  "environment": "development"
+}
+```
+
+#### 5. System Information
+**GET** `/system`
+
+Returns detailed system information and status.
+
+**Response**:
+```json
+{
+  "status": "OK",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "system": {
+    "platform": "linux",
+    "arch": "x64",
+    "nodeVersion": "18.17.0",
+    "memory": {
+      "used": "45.2 MB",
+      "total": "512 MB",
+      "percentage": 8.8
+    },
+    "uptime": 12345
+  }
 }
 ```
 
 ### Error Responses
 
-All endpoints return appropriate HTTP status codes and error messages:
+All endpoints return appropriate HTTP status codes and structured error messages:
 
 ```json
 {
-  "error": "Error description"
+  "error": "Error description",
+  "statusCode": 400,
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "path": "/api/file"
 }
 ```
 
 Common status codes:
 - `200`: Success
-- `400`: Bad Request (invalid parameters)
+- `400`: Bad Request (invalid parameters or validation errors)
 - `404`: Not Found (file/directory doesn't exist)
 - `500`: Internal Server Error
+
+### Validation
+
+All API endpoints use TypeBox schemas for automatic request/response validation:
+- **Request validation**: Query parameters and request body are automatically validated
+- **Response validation**: Response data is validated against defined schemas
+- **Error handling**: Validation errors return structured error responses
+- **Type safety**: Full type safety with JSON Schema validation
 
 ## Usage Guide
 
@@ -390,20 +449,61 @@ The test suite covers:
    docker-compose up --build
    ```
 
-2. **Test navigation**:
+2. **Test API endpoints**:
+   ```bash
+   # Test using the provided test script
+   node backend/examples/api-test.js
+
+   # Or test individual endpoints
+   curl http://localhost:3001/api/health
+   curl http://localhost:3001/api/system
+   curl "http://localhost:3001/api/list?path=/"
+   ```
+
+3. **Test API documentation**:
+   - Visit http://localhost:3001/api/docs
+   - Try the interactive Swagger UI
+   - Test endpoints directly from the documentation
+
+4. **Test navigation**:
    - Navigate to different directories
    - Use breadcrumb navigation
    - Test search functionality
 
-3. **Test file operations**:
+5. **Test file operations**:
    - View different file types
    - Download individual files
    - Download directories as ZIP
 
-4. **Test responsive design**:
+6. **Test responsive design**:
    - Resize browser window
    - Test on mobile devices
    - Switch between view modes
+
+### Backend Architecture Testing
+
+The new Fastify backend includes:
+
+- **TypeBox Validation**: All requests are automatically validated
+- **Error Handling**: Custom error classes for different error types
+- **Logging**: Structured logging with request/response details
+- **Documentation**: Auto-generated OpenAPI specification
+- **Performance**: Enhanced performance with Fastify optimizations
+- **Modular Routes**: Separate route files for each controller (health, files)
+
+### Route Structure
+
+The backend follows a modular route architecture:
+
+```
+backend/src/routes/
+├── api.js          # Main API router
+├── health.js       # Health check routes
+├── files.js        # File system routes
+└── README.md       # Route documentation
+```
+
+Each route file is organized by controller functionality, making the codebase more maintainable and scalable.
 
 ## Design Rationale
 
@@ -426,14 +526,18 @@ The test suite covers:
 - Excellent tooling and ecosystem
 - Enterprise-grade framework suitable for complex applications
 
-#### 3. Node.js/Express for Backend
-**Decision**: Use Node.js with Express framework
+#### 3. Node.js/Fastify for Backend
+**Decision**: Use Node.js with Fastify framework
 **Rationale**:
 - JavaScript ecosystem consistency
+- ~2x performance improvement over Express
+- Built-in JSON Schema validation with TypeBox
+- Automatic OpenAPI/Swagger documentation generation
 - Excellent file system handling capabilities
 - Rich package ecosystem (archiver, fs-extra)
 - Fast development and deployment
-- Good performance for I/O operations
+- Superior performance for I/O operations
+- Structured logging with Pino
 
 #### 4. Docker Containerization
 **Decision**: Containerize both services
@@ -511,6 +615,17 @@ The test suite covers:
 - Secure file access patterns
 - Professional security standards
 - Production-ready implementation
+
+#### 5. Fastify Migration Benefits
+**Decision**: Migrate from Express to Fastify
+**Rationale**:
+- **Performance**: ~2x faster request/response handling
+- **Validation**: Built-in JSON Schema validation with TypeBox
+- **Documentation**: Automatic OpenAPI/Swagger documentation generation
+- **Type Safety**: Full type safety with request/response validation
+- **Logging**: Structured logging with Pino for better debugging
+- **Error Handling**: Enhanced error handling with custom error classes
+- **Modularity**: Better route organization with separate route files
 
 ## AI Usage Policy
 

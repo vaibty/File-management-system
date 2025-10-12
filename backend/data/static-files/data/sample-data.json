@@ -1,0 +1,32 @@
+{
+  "test_results": [
+    {
+      "id": 1,
+      "test_name": "Login Test",
+      "status": "PASSED",
+      "duration": 1.23,
+      "timestamp": "2025-10-11T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "test_name": "Registration Test",
+      "status": "FAILED",
+      "duration": 2.45,
+      "timestamp": "2025-10-11T10:01:00Z",
+      "error": "Email validation failed"
+    },
+    {
+      "id": 3,
+      "test_name": "API Test",
+      "status": "PASSED",
+      "duration": 0.87,
+      "timestamp": "2025-10-11T10:02:00Z"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "passed": 2,
+    "failed": 1,
+    "success_rate": 66.67
+  }
+}
