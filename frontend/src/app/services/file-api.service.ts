@@ -1,6 +1,7 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HttpService } from './http.service';
 
 /**
  * File API Service - Handles all file-related API calls
@@ -16,7 +17,7 @@ export class FileApiService {
   /** Base URL for the file management API */
   private readonly API_BASE = 'http://localhost:3001/api';
 
-  constructor(private http: HttpClient) { }
+  constructor(private httpService: HttpService) { }
 
   /**
    * Get list of files and directories in the specified path
@@ -25,7 +26,7 @@ export class FileApiService {
    */
   getDirectoryList(path: string = '/'): Observable<FileItem[]> {
     const params = new HttpParams().set('path', path);
-    return this.http.get<FileItem[]>(`${this.API_BASE}/list`, { params });
+    return this.httpService.get<FileItem[]>(`${this.API_BASE}/list`, { params });
   }
 
   /**
@@ -35,7 +36,7 @@ export class FileApiService {
    */
   getFileContent(path: string): Observable<string> {
     const params = new HttpParams().set('path', path);
-    return this.http.get(`${this.API_BASE}/file`, {
+    return this.httpService.get<string>(`${this.API_BASE}/file`, {
       params,
       responseType: 'text'
     });
@@ -48,6 +49,81 @@ export class FileApiService {
    */
   getDownloadUrl(path: string): string {
     return `${this.API_BASE}/download?path=${encodeURIComponent(path)}`;
+  }
+
+  /**
+   * Download a file as a blob
+   * @param path - Path to the file to download
+   * @returns Observable of the file blob
+   */
+  downloadFile(path: string): Observable<Blob> {
+    const params = new HttpParams().set('path', path);
+    return this.httpService.downloadFile(`${this.API_BASE}/download`, { params });
+  }
+
+  /**
+   * Upload a file
+   * @param file - The file to upload
+   * @param targetPath - The target path where the file should be uploaded
+   * @returns Observable of the upload response
+   */
+  uploadFile(file: File, targetPath: string): Observable<any> {
+    const additionalData = { targetPath };
+    return this.httpService.uploadFile(`${this.API_BASE}/upload`, file, additionalData);
+  }
+
+  /**
+   * Create a new directory
+   * @param path - Path where the directory should be created
+   * @param name - Name of the new directory
+   * @returns Observable of the creation response
+   */
+  createDirectory(path: string, name: string): Observable<any> {
+    const body = { path, name };
+    return this.httpService.post(`${this.API_BASE}/directory`, body);
+  }
+
+  /**
+   * Delete a file or directory
+   * @param path - Path to the file or directory to delete
+   * @returns Observable of the deletion response
+   */
+  deleteFile(path: string): Observable<any> {
+    const params = new HttpParams().set('path', path);
+    return this.httpService.delete(`${this.API_BASE}/file`, { params });
+  }
+
+  /**
+   * Rename a file or directory
+   * @param oldPath - Current path of the file or directory
+   * @param newName - New name for the file or directory
+   * @returns Observable of the rename response
+   */
+  renameFile(oldPath: string, newName: string): Observable<any> {
+    const body = { oldPath, newName };
+    return this.httpService.put(`${this.API_BASE}/file/rename`, body);
+  }
+
+  /**
+   * Move a file or directory
+   * @param sourcePath - Current path of the file or directory
+   * @param targetPath - Target path where the item should be moved
+   * @returns Observable of the move response
+   */
+  moveFile(sourcePath: string, targetPath: string): Observable<any> {
+    const body = { sourcePath, targetPath };
+    return this.httpService.put(`${this.API_BASE}/file/move`, body);
+  }
+
+  /**
+   * Copy a file or directory
+   * @param sourcePath - Path of the file or directory to copy
+   * @param targetPath - Target path where the item should be copied
+   * @returns Observable of the copy response
+   */
+  copyFile(sourcePath: string, targetPath: string): Observable<any> {
+    const body = { sourcePath, targetPath };
+    return this.httpService.post(`${this.API_BASE}/file/copy`, body);
   }
 }
 

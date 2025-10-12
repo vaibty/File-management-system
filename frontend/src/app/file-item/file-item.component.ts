@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FileItem } from '../services/file-api.service';
 import { FileUtilsService } from '../services/file-utils.service';
 
@@ -14,7 +14,8 @@ import { FileUtilsService } from '../services/file-utils.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './file-item.component.html',
-  styleUrls: ['./file-item.component.scss']
+  styleUrls: ['./file-item.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileItemComponent {
   /** File or directory item to display */

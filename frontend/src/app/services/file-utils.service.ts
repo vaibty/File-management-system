@@ -1,6 +1,25 @@
 import { Injectable } from '@angular/core';
 
 /**
+ * Memoization utility for caching function results
+ */
+function memoize<T extends (...args: any[]) => any>(fn: T): T {
+  const cache = new Map<string, ReturnType<T>>();
+
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key)!;
+    }
+
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
+}
+
+/**
  * File Utils Service - Utility functions for file operations
  *
  * This service provides common utility functions for file handling,
@@ -16,7 +35,7 @@ export class FileUtilsService {
    * @param bytes - Size in bytes
    * @returns Formatted size string (e.g., "1.5 MB")
    */
-  formatFileSize(bytes: number): string {
+  formatFileSize = memoize((bytes: number): string => {
     if (bytes === 0) return '0 B';
 
     const k = 1024;
@@ -24,18 +43,18 @@ export class FileUtilsService {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
+  });
 
   /**
    * Format date string to localized date and time
    * @param dateString - ISO date string
    * @returns Formatted date and time string
    */
-  formatDate(dateString: string): string {
+  formatDate = memoize((dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' +
       date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
+  });
 
   /**
    * Get appropriate icon for file type
@@ -43,14 +62,14 @@ export class FileUtilsService {
    * @param isFolder - Whether the item is a folder
    * @returns Emoji icon string
    */
-  getFileIcon(fileName: string, isFolder: boolean): string {
+  getFileIcon = memoize((fileName: string, isFolder: boolean): string => {
     if (isFolder) {
       return '📁';
     }
 
     const extension = fileName.split('.').pop()?.toLowerCase();
     return this.getIconByExtension(extension);
-  }
+  });
 
   /**
    * Get icon based on file extension
@@ -104,7 +123,7 @@ export class FileUtilsService {
    * @param query - Search query string
    * @returns Filtered array of items
    */
-  filterItems(items: any[], query: string): any[] {
+  filterItems = memoize((items: any[], query: string): any[] => {
     if (!query.trim()) {
       return items;
     }
@@ -113,14 +132,14 @@ export class FileUtilsService {
     return items.filter(item =>
       item.name.toLowerCase().includes(searchQuery)
     );
-  }
+  });
 
   /**
    * Navigate to parent directory path
    * @param currentPath - Current directory path
    * @returns Parent directory path
    */
-  getParentPath(currentPath: string): string {
+  getParentPath = memoize((currentPath: string): string => {
     if (currentPath === '/') {
       return '/';
     }
@@ -128,17 +147,17 @@ export class FileUtilsService {
     const pathSegments = currentPath.split('/').filter(segment => segment);
     pathSegments.pop(); // Remove last segment
     return pathSegments.length > 0 ? '/' + pathSegments.join('/') : '/';
-  }
+  });
 
   /**
    * Get breadcrumb segments from path
    * @param path - Directory path
    * @returns Array of breadcrumb segments
    */
-  getBreadcrumbs(path: string): string[] {
+  getBreadcrumbs = memoize((path: string): string[] => {
     if (path === '/') {
       return ['/'];
     }
     return path.split('/').filter(segment => segment);
-  }
+  });
 }
