@@ -3,7 +3,9 @@ import { RouterOutlet } from '@angular/router';
 
 /**
  * AppComponent - Main application component
- * Acts as the root component with router outlet
+ *
+ * This is the root component of the File Management System application.
+ * It provides the main layout structure and router outlet for navigation.
  */
 @Component({
   selector: 'app-root',
@@ -13,5 +15,6 @@ import { RouterOutlet } from '@angular/router';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'Test Report Dashboard';
+  /** Application title displayed in the header */
+  readonly title = 'File Management System';
 }

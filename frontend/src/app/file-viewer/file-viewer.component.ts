@@ -1,8 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FileItem } from '../file-item/file-item.component';
+import { FileApiService, FileItem } from '../services/file-api.service';
+import { FileUtilsService } from '../services/file-utils.service';
 
+/**
+ * FileViewerComponent - Modal component for viewing file contents
+ *
+ * This component displays file contents in a modal dialog with syntax highlighting
+ * and formatting for different file types.
+ */
 @Component({
   selector: 'app-file-viewer',
   standalone: true,
@@ -11,30 +17,41 @@ import { FileItem } from '../file-item/file-item.component';
   styleUrls: ['./file-viewer.component.scss']
 })
 export class FileViewerComponent implements OnInit {
+  /** File item to display */
   @Input() file!: FileItem;
+
+  /** Event emitted when closing the viewer */
   @Output() close = new EventEmitter<void>();
+
+  /** Event emitted when downloading the file */
   @Output() download = new EventEmitter<FileItem>();
 
+  /** File content to display */
   content: string = '';
+
+  /** Loading state indicator */
   loading = false;
+
+  /** Error message if any */
   error: string | null = null;
 
-  private readonly API_BASE = 'http://localhost:3001/api';
-
-  constructor(private http: HttpClient) { }
+  constructor(
+    private fileApiService: FileApiService,
+    private fileUtilsService: FileUtilsService
+  ) { }
 
   ngOnInit() {
     this.loadFileContent();
   }
 
-  loadFileContent() {
+  /**
+   * Loads file content from the API
+   */
+  loadFileContent(): void {
     this.loading = true;
     this.error = null;
 
-    this.http.get(`${this.API_BASE}/file`, {
-      params: { path: this.file.path },
-      responseType: 'text'
-    }).subscribe({
+    this.fileApiService.getFileContent(this.file.path).subscribe({
       next: (content) => {
         this.content = content;
         this.loading = false;
@@ -47,25 +64,46 @@ export class FileViewerComponent implements OnInit {
     });
   }
 
-  onClose() {
+  /**
+   * Handles close button click
+   */
+  onClose(): void {
     this.close.emit();
   }
 
-  onDownload() {
+  /**
+   * Handles download button click
+   */
+  onDownload(): void {
     this.download.emit(this.file);
   }
 
+  /**
+   * Gets file type based on extension
+   * @returns File type string
+   */
   getFileType(): string {
     const extension = this.file.name.split('.').pop()?.toLowerCase();
     return extension || 'text';
   }
 
+  /**
+   * Checks if file is a text file that can be displayed
+   * @returns True if file is a text file
+   */
   isTextFile(): boolean {
-    const textExtensions = ['txt', 'log', 'json', 'js', 'ts', 'html', 'css', 'scss', 'md', 'xml', 'yaml', 'yml'];
+    const textExtensions = [
+      'txt', 'log', 'json', 'js', 'ts', 'html', 'css', 'scss',
+      'md', 'xml', 'yaml', 'yml', 'ini', 'conf', 'csv'
+    ];
     const extension = this.file.name.split('.').pop()?.toLowerCase();
     return textExtensions.includes(extension || '');
   }
 
+  /**
+   * Formats content for display (e.g., JSON pretty-printing)
+   * @returns Formatted content string
+   */
   formatContent(): string {
     if (this.getFileType() === 'json') {
       try {
@@ -78,13 +116,12 @@ export class FileViewerComponent implements OnInit {
     return this.content;
   }
 
+  /**
+   * Formats file size for display
+   * @param bytes - Size in bytes
+   * @returns Formatted size string
+   */
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return this.fileUtilsService.formatFileSize(bytes);
   }
 }

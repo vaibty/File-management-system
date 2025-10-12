@@ -1,14 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, Subject, takeUntil } from 'rxjs';
-import { FileItem, FileItemComponent } from '../file-item/file-item.component';
+import { FileItemComponent } from '../file-item/file-item.component';
 import { FileViewerComponent } from '../file-viewer/file-viewer.component';
+import { FileApiService, FileItem } from '../services/file-api.service';
+import { FileUtilsService } from '../services/file-utils.service';
 
 /**
  * FileBrowserComponent - Main file browser component with routing support
- * Handles navigation, file operations, and URL synchronization
+ *
+ * This component provides the main file browsing interface with navigation,
+ * file operations, search functionality, and URL synchronization.
  */
 @Component({
   selector: 'app-file-browser',
@@ -18,21 +21,39 @@ import { FileViewerComponent } from '../file-viewer/file-viewer.component';
   styleUrls: ['./file-browser.component.scss']
 })
 export class FileBrowserComponent implements OnInit, OnDestroy {
-  title = 'Test Report Dashboard';
+  /** Application title */
+  readonly title = 'File Management System';
+
+  /** Current directory path */
   currentPath = '/';
+
+  /** Array of file and directory items */
   items: FileItem[] = [];
+
+  /** Loading state indicator */
   loading = false;
+
+  /** Error message if any */
   error: string | null = null;
+
+  /** Current view mode (grid or list) */
   viewMode: 'grid' | 'list' = 'grid';
+
+  /** Currently selected file for viewing */
   selectedFile: FileItem | null = null;
+
+  /** Whether file viewer modal is open */
   showFileViewer = false;
+
+  /** Search query for filtering items */
   searchQuery = '';
 
-  private readonly API_BASE = 'http://localhost:3001/api';
+  /** Subject for component destruction cleanup */
   private destroy$ = new Subject<void>();
 
   constructor(
-    private http: HttpClient,
+    private fileApiService: FileApiService,
+    private fileUtilsService: FileUtilsService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -70,14 +91,12 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
    * Loads directory contents and updates the current path
    * @param path - Directory path to load
    */
-  loadDirectory(path: string) {
+  loadDirectory(path: string): void {
     this.loading = true;
     this.error = null;
     this.currentPath = path;
 
-    this.http.get<FileItem[]>(`${this.API_BASE}/list`, {
-      params: { path }
-    }).subscribe({
+    this.fileApiService.getDirectoryList(path).subscribe({
       next: (items) => {
         this.items = items;
         this.loading = false;
@@ -104,12 +123,11 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
   /**
    * Navigates to parent directory
    */
-  navigateUp() {
+  navigateUp(): void {
     if (this.currentPath !== '/') {
-      const pathSegments = this.currentPath.split('/').filter(segment => segment);
-      pathSegments.pop(); // Remove last segment
-      const parentPath = pathSegments.length > 0 ? pathSegments.join('/') : '';
-      this.router.navigate(['/browse', parentPath]);
+      const parentPath = this.fileUtilsService.getParentPath(this.currentPath);
+      const pathWithoutSlash = parentPath.substring(1);
+      this.router.navigate(['/browse', pathWithoutSlash]);
     }
   }
 
@@ -127,10 +145,7 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
    * @returns Array of breadcrumb segments
    */
   getBreadcrumbs(): string[] {
-    if (this.currentPath === '/') {
-      return ['/'];
-    }
-    return this.currentPath.split('/').filter(segment => segment);
+    return this.fileUtilsService.getBreadcrumbs(this.currentPath);
   }
 
   /**
@@ -163,9 +178,9 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
    * Downloads a file or folder
    * @param item - Item to download
    */
-  downloadItem(item: FileItem) {
+  downloadItem(item: FileItem): void {
     const link = document.createElement('a');
-    link.href = `${this.API_BASE}/download?path=${encodeURIComponent(item.path)}`;
+    link.href = this.fileApiService.getDownloadUrl(item.path);
     link.download = item.name;
     document.body.appendChild(link);
     link.click();
@@ -177,14 +192,7 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
    * @returns Filtered array of items
    */
   getFilteredItems(): FileItem[] {
-    if (!this.searchQuery.trim()) {
-      return this.items;
-    }
-
-    const query = this.searchQuery.toLowerCase();
-    return this.items.filter(item =>
-      item.name.toLowerCase().includes(query)
-    );
+    return this.fileUtilsService.filterItems(this.items, this.searchQuery);
   }
 
   /**

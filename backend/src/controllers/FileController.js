@@ -2,61 +2,69 @@ const FileService = require('../services/fileService');
 
 /**
  * FileController - Handles file system operations and API endpoints
+ *
+ * This controller acts as a bridge between the HTTP layer and the file service,
+ * providing clean separation of concerns and consistent error handling.
  */
 class FileController {
+  /**
+   * Creates a new FileController instance
+   * @param {FileService} fileService - The file service instance
+   */
   constructor(fileService) {
     this.fileService = fileService;
   }
 
   /**
    * Lists files and directories in the specified path
+   * @param {string} dirPath - Directory path to list (default: '/')
+   * @returns {Promise<Array>} Array of file/directory items
+   * @throws {Error} When directory listing fails
    */
-  async listDirectory(req, res) {
+  async listDirectory(dirPath = '/') {
     try {
-      const { path: dirPath = '/' } = req.query;
-      const items = await this.fileService.listDirectory(dirPath);
-      res.json(items);
+      return await this.fileService.listDirectory(dirPath);
     } catch (error) {
       console.error('Error listing directory:', error);
-      res.status(500).json({ error: error.message });
+      throw error;
     }
   }
 
   /**
    * Retrieves content of a specific file
+   * @param {string} filePath - Path to the file
+   * @returns {Promise<Object>} File data object with content, size, and modified date
+   * @throws {Error} When file path is invalid or file cannot be read
    */
-  async getFileContent(req, res) {
+  async getFileContent(filePath) {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+
     try {
-      const { path: filePath } = req.query;
-
-      if (!filePath) {
-        return res.status(400).json({ error: 'File path is required' });
-      }
-
-      const fileData = await this.fileService.getFileContent(filePath);
-      res.setHeader('Content-Type', 'text/plain');
-      res.send(fileData.content);
+      return await this.fileService.getFileContent(filePath);
     } catch (error) {
       console.error('Error getting file content:', error);
-      res.status(500).json({ error: error.message });
+      throw error;
     }
   }
 
   /**
    * Downloads a file or directory as a zip archive
+   * @param {string} itemPath - Path to the item to download
+   * @param {Object} reply - Fastify reply object for streaming response
+   * @throws {Error} When item path is invalid or download fails
    */
-  async downloadItem(req, res) {
+  async downloadItem(itemPath, reply) {
+    if (!itemPath) {
+      throw new Error('Item path is required');
+    }
+
     try {
-      const { path: itemPath } = req.query;
-
-      if (!itemPath) {
-        return res.status(400).json({ error: 'Item path is required' });
-      }
-
-      await this.fileService.downloadItem(itemPath, res);
+      await this.fileService.downloadItem(itemPath, reply);
     } catch (error) {
       console.error('Error downloading item:', error);
-      res.status(500).json({ error: error.message });
+      throw error;
     }
   }
 }

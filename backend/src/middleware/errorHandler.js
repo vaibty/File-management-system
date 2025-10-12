@@ -1,59 +1,99 @@
 /**
- * Error handling middleware
+ * Error handling utilities for Fastify
  * Centralized error handling for the application
  */
 
 /**
- * Global error handler middleware
- * @param {Error} err - Error object
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
+ * Custom error classes for better error handling
  */
-const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ValidationError';
+    this.statusCode = 400;
+  }
+}
+
+class UnauthorizedError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'UnauthorizedError';
+    this.statusCode = 401;
+  }
+}
+
+class ForbiddenError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ForbiddenError';
+    this.statusCode = 403;
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = 404;
+  }
+}
+
+/**
+ * Fastify error handler
+ * @param {Error} error - Error object
+ * @param {Object} request - Fastify request object
+ * @param {Object} reply - Fastify reply object
+ */
+const errorHandler = async (error, request, reply) => {
+  // Log the error
+  request.log.error(error);
 
   // Default error response
-  let statusCode = 500;
-  let message = 'Internal Server Error';
+  let statusCode = error.statusCode || 500;
+  let message = error.message || 'Internal Server Error';
 
   // Handle specific error types
-  if (err.name === 'ValidationError') {
+  if (error.name === 'ValidationError') {
     statusCode = 400;
     message = 'Validation Error';
-  } else if (err.name === 'UnauthorizedError') {
+  } else if (error.name === 'UnauthorizedError') {
     statusCode = 401;
     message = 'Unauthorized';
-  } else if (err.name === 'ForbiddenError') {
+  } else if (error.name === 'ForbiddenError') {
     statusCode = 403;
     message = 'Forbidden';
-  } else if (err.name === 'NotFoundError') {
+  } else if (error.name === 'NotFoundError') {
     statusCode = 404;
     message = 'Not Found';
   }
 
-  res.status(statusCode).json({
+  return reply.status(statusCode).send({
     error: message,
+    statusCode,
     timestamp: new Date().toISOString(),
-    path: req.path
+    path: request.url
   });
 };
 
 /**
  * 404 handler for undefined routes
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * @param {Object} request - Fastify request object
+ * @param {Object} reply - Fastify reply object
  */
-const notFoundHandler = (req, res) => {
-  res.status(404).json({
+const notFoundHandler = async (request, reply) => {
+  return reply.status(404).send({
     error: 'Route not found',
-    path: req.path,
-    method: req.method,
+    message: `Route ${request.method}:${request.url} not found`,
+    statusCode: 404,
     timestamp: new Date().toISOString()
   });
 };
 
 module.exports = {
   errorHandler,
-  notFoundHandler
+  notFoundHandler,
+  ValidationError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError
 };

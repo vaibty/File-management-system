@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FileItem } from '../services/file-api.service';
+import { FileUtilsService } from '../services/file-utils.service';
 
-export interface FileItem {
-  isFolder: boolean;
-  name: string;
-  path: string;
-  size: number;
-  modified: string;
-}
-
+/**
+ * FileItemComponent - Displays individual file or directory items
+ *
+ * This component renders file and directory items in both grid and list views,
+ * providing click handlers for navigation and file operations.
+ */
 @Component({
   selector: 'app-file-item',
   standalone: true,
@@ -17,13 +17,27 @@ export interface FileItem {
   styleUrls: ['./file-item.component.scss']
 })
 export class FileItemComponent {
+  /** File or directory item to display */
   @Input() item!: FileItem;
+
+  /** Current view mode (grid or list) */
   @Input() viewMode: 'grid' | 'list' = 'grid';
+
+  /** Event emitted when navigating to a folder */
   @Output() navigate = new EventEmitter<FileItem>();
+
+  /** Event emitted when opening a file */
   @Output() openFile = new EventEmitter<FileItem>();
+
+  /** Event emitted when downloading an item */
   @Output() download = new EventEmitter<FileItem>();
 
-  onItemClick() {
+  constructor(private fileUtilsService: FileUtilsService) { }
+
+  /**
+   * Handles item click - navigates to folder or opens file
+   */
+  onItemClick(): void {
     if (this.item.isFolder) {
       this.navigate.emit(this.item);
     } else {
@@ -31,63 +45,38 @@ export class FileItemComponent {
     }
   }
 
-  onDownload(event: Event) {
+  /**
+   * Handles download button click
+   * @param event - Click event
+   */
+  onDownload(event: Event): void {
     event.stopPropagation();
     this.download.emit(this.item);
   }
 
+  /**
+   * Formats file size for display
+   * @param bytes - Size in bytes
+   * @returns Formatted size string
+   */
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return this.fileUtilsService.formatFileSize(bytes);
   }
 
+  /**
+   * Formats date for display
+   * @param dateString - ISO date string
+   * @returns Formatted date string
+   */
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return this.fileUtilsService.formatDate(dateString);
   }
 
+  /**
+   * Gets appropriate icon for the file type
+   * @returns Emoji icon string
+   */
   getFileIcon(): string {
-    if (this.item.isFolder) {
-      return '📁';
-    }
-
-    const extension = this.item.name.split('.').pop()?.toLowerCase();
-
-    switch (extension) {
-      case 'log':
-        return '📄';
-      case 'json':
-        return '📋';
-      case 'txt':
-        return '📝';
-      case 'md':
-        return '📖';
-      case 'js':
-      case 'ts':
-        return '⚡';
-      case 'html':
-        return '🌐';
-      case 'css':
-      case 'scss':
-        return '🎨';
-      case 'png':
-      case 'jpg':
-      case 'jpeg':
-      case 'gif':
-        return '🖼️';
-      case 'pdf':
-        return '📕';
-      case 'zip':
-      case 'tar':
-      case 'gz':
-        return '📦';
-      default:
-        return '📄';
-    }
+    return this.fileUtilsService.getFileIcon(this.item.name, this.item.isFolder);
   }
 }

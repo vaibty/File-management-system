@@ -1,20 +1,23 @@
 {
-  "name": "test-report-dashboard-backend",
+  "name": "file-management-system-backend",
   "version": "1.0.0",
-  "description": "Backend server for Test Report Dashboard",
+  "description": "Backend server for File Management System with Fastify and TypeBox",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
+    "fastify": "^4.24.3",
+    "@fastify/cors": "^8.4.0",
+    "@fastify/swagger": "^8.12.0",
+    "@fastify/swagger-ui": "^2.0.0",
+    "@sinclair/typebox": "^0.31.25",
     "archiver": "^6.0.1",
-    "fs-extra": "^11.1.1",
-    "path": "^0.12.7"
+    "fs-extra": "^11.1.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "pino-pretty": "^10.2.3"
   }
 }

@@ -1,0 +1,7 @@
+timestamp,metric_name,value,unit
+2025-10-11T10:00:00Z,cpu_usage,45.2,percent
+2025-10-11T10:00:00Z,memory_usage,67.8,percent
+2025-10-11T10:00:00Z,disk_usage,23.4,percent
+2025-10-11T10:01:00Z,cpu_usage,42.1,percent
+2025-10-11T10:01:00Z,memory_usage,68.2,percent
+2025-10-11T10:01:00Z,disk_usage,23.5,percent

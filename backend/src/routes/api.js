@@ -1,29 +1,25 @@
-const express = require('express');
-const FileController = require('../controllers/FileController');
-const HealthController = require('../controllers/HealthController');
-const FileService = require('../services/fileService');
+const healthRoutes = require('./health');
+const fileRoutes = require('./files');
 
 /**
- * API Routes Configuration
+ * API Routes Configuration for Fastify
+ * Main router that registers all route modules
  */
-const setupApiRoutes = (dataDir) => {
-  const router = express.Router();
+async function setupApiRoutes(fastify, options) {
+  const { dataDir } = options;
 
   // Initialize services and controllers
+  const FileService = require('../services/fileService');
+  const FileController = require('../controllers/FileController');
+  const HealthController = require('../controllers/HealthController');
+
   const fileService = new FileService(dataDir);
   const fileController = new FileController(fileService);
   const healthController = new HealthController();
 
-  // Health check routes
-  router.get('/health', (req, res) => healthController.getHealth(req, res));
-  router.get('/system', (req, res) => healthController.getSystemInfo(req, res));
-
-  // File system routes
-  router.get('/list', (req, res) => fileController.listDirectory(req, res));
-  router.get('/file', (req, res) => fileController.getFileContent(req, res));
-  router.get('/download', (req, res) => fileController.downloadItem(req, res));
-
-  return router;
-};
+  // Register route modules with their dependencies
+  await fastify.register(healthRoutes, { healthController });
+  await fastify.register(fileRoutes, { fileController });
+}
 
 module.exports = setupApiRoutes;

@@ -2,26 +2,32 @@ const HealthService = require('../services/healthService');
 
 /**
  * HealthController - Handles health check and system status endpoints
+ *
+ * This controller provides health monitoring capabilities for the API,
+ * including basic health checks and system information.
  */
 class HealthController {
+  /**
+   * Creates a new HealthController instance
+   */
   constructor() {
     this.healthService = new HealthService();
   }
 
   /**
    * Returns health status of the API server
+   * @returns {Object} Health status object with timestamp and uptime
    */
-  getHealth(req, res) {
-    const health = this.healthService.getHealth();
-    res.json(health);
+  getHealth() {
+    return this.healthService.getHealth();
   }
 
   /**
    * Returns system information and status
+   * @returns {Object} System information including memory usage and platform details
    */
-  getSystemInfo(req, res) {
-    const systemInfo = this.healthService.getSystemInfo();
-    res.json(systemInfo);
+  getSystemInfo() {
+    return this.healthService.getSystemInfo();
   }
 }
 
