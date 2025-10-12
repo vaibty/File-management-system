@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { filter, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, Subject, takeUntil } from 'rxjs';
 import { FileItemComponent } from '../file-item/file-item.component';
 import { FileViewerComponent } from '../file-viewer/file-viewer.component';
 import { FileApiService, FileItem } from '../services/file-api.service';
@@ -18,7 +18,8 @@ import { FileUtilsService } from '../services/file-utils.service';
   standalone: true,
   imports: [CommonModule, FileItemComponent, FileViewerComponent],
   templateUrl: './file-browser.component.html',
-  styleUrls: ['./file-browser.component.scss']
+  styleUrls: ['./file-browser.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileBrowserComponent implements OnInit, OnDestroy {
   /** Application title */
@@ -48,14 +49,22 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
   /** Search query for filtering items */
   searchQuery = '';
 
+  /** Cached filtered items for performance */
+  private cachedFilteredItems: FileItem[] = [];
+  private lastSearchQuery = '';
+
   /** Subject for component destruction cleanup */
   private destroy$ = new Subject<void>();
+
+  /** Subject for search input debouncing */
+  private searchSubject$ = new Subject<string>();
 
   constructor(
     private fileApiService: FileApiService,
     private fileUtilsService: FileUtilsService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -78,13 +87,28 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
         const path = this.route.snapshot.params['path'] ? '/' + this.route.snapshot.params['path'] : '/';
         if (path !== this.currentPath) {
           this.currentPath = path;
+          this.cdr.markForCheck();
         }
+      });
+
+    // Setup debounced search
+    this.searchSubject$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(query => {
+        this.searchQuery = query;
+        this.cachedFilteredItems = [];
+        this.cdr.markForCheck();
       });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    this.searchSubject$.complete();
   }
 
   /**
@@ -95,16 +119,20 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     this.currentPath = path;
+    this.cachedFilteredItems = []; // Clear cache when loading new directory
+    this.cdr.markForCheck();
 
     this.fileApiService.getDirectoryList(path).subscribe({
       next: (items) => {
         this.items = items;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading directory:', error);
         this.error = 'Failed to load directory contents';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -153,6 +181,7 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
    */
   toggleViewMode() {
     this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid';
+    this.cdr.markForCheck();
   }
 
   /**
@@ -163,6 +192,7 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
     if (!file.isFolder) {
       this.selectedFile = file;
       this.showFileViewer = true;
+      this.cdr.markForCheck();
     }
   }
 
@@ -172,6 +202,7 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
   closeFileViewer() {
     this.showFileViewer = false;
     this.selectedFile = null;
+    this.cdr.markForCheck();
   }
 
   /**
@@ -188,19 +219,27 @@ export class FileBrowserComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Gets filtered items based on search query
+   * Gets filtered items based on search query with caching
    * @returns Filtered array of items
    */
   getFilteredItems(): FileItem[] {
-    return this.fileUtilsService.filterItems(this.items, this.searchQuery);
+    // Use cache if search query hasn't changed
+    if (this.searchQuery === this.lastSearchQuery && this.cachedFilteredItems.length > 0) {
+      return this.cachedFilteredItems;
+    }
+
+    // Filter and cache the results
+    this.cachedFilteredItems = this.fileUtilsService.filterItems(this.items, this.searchQuery);
+    this.lastSearchQuery = this.searchQuery;
+    return this.cachedFilteredItems;
   }
 
   /**
-   * Handles search input changes
+   * Handles search input changes with debouncing
    * @param event - Input event
    */
   onSearchChange(event: Event) {
     const target = event.target as HTMLInputElement;
-    this.searchQuery = target.value;
+    this.searchSubject$.next(target.value);
   }
 }

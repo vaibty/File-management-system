@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FileApiService, FileItem } from '../services/file-api.service';
 import { FileUtilsService } from '../services/file-utils.service';
 
@@ -14,7 +14,8 @@ import { FileUtilsService } from '../services/file-utils.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './file-viewer.component.html',
-  styleUrls: ['./file-viewer.component.scss']
+  styleUrls: ['./file-viewer.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileViewerComponent implements OnInit {
   /** File item to display */
@@ -37,7 +38,8 @@ export class FileViewerComponent implements OnInit {
 
   constructor(
     private fileApiService: FileApiService,
-    private fileUtilsService: FileUtilsService
+    private fileUtilsService: FileUtilsService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -50,16 +52,19 @@ export class FileViewerComponent implements OnInit {
   loadFileContent(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     this.fileApiService.getFileContent(this.file.path).subscribe({
       next: (content) => {
         this.content = content;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading file content:', error);
         this.error = 'Failed to load file content';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
