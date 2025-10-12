@@ -113,71 +113,7 @@ export class HttpService {
     ) as Observable<T>;
   }
 
-  /**
-   * Perform a HEAD request
-   * @param url - The URL to make the request to
-   * @param options - Optional HTTP options (headers, params, etc.)
-   * @returns Observable of the response headers
-   */
-  head(url: string, options?: HttpOptions): Observable<any> {
-    const httpOptions = this.buildHttpOptions(options);
-    return this.http.head(url, httpOptions).pipe(
-      catchError(this.handleError)
-    ) as Observable<any>;
-  }
 
-  /**
-   * Perform an OPTIONS request
-   * @param url - The URL to make the request to
-   * @param options - Optional HTTP options (headers, params, etc.)
-   * @returns Observable of the response
-   */
-  options<T>(url: string, options?: HttpOptions): Observable<T> {
-    const httpOptions = this.buildHttpOptions(options);
-    return this.http.options<T>(url, httpOptions).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
-
-  /**
-   * Download a file as a blob
-   * @param url - The URL to download from
-   * @param options - Optional HTTP options
-   * @returns Observable of the blob
-   */
-  downloadFile(url: string, options?: HttpOptions): Observable<Blob> {
-    const httpOptions = this.buildHttpOptions(options);
-    httpOptions.responseType = 'blob';
-    return this.http.get<Blob>(url, httpOptions).pipe(
-      catchError(this.handleError)
-    ) as unknown as Observable<Blob>;
-  }
-
-  /**
-   * Upload a file
-   * @param url - The URL to upload to
-   * @param file - The file to upload
-   * @param additionalData - Additional form data to include
-   * @param options - Optional HTTP options
-   * @returns Observable of the response
-   */
-  uploadFile<T>(url: string, file: File, additionalData?: any, options?: HttpOptions): Observable<T> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    if (additionalData) {
-      Object.keys(additionalData).forEach(key => {
-        formData.append(key, additionalData[key]);
-      });
-    }
-
-    const httpOptions = this.buildHttpOptions(options);
-    httpOptions.headers = httpOptions.headers?.delete('Content-Type') || new HttpHeaders();
-
-    return this.http.post<T>(url, formData, httpOptions).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
 
   /**
    * Build HTTP options from custom options

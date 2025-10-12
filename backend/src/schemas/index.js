@@ -9,10 +9,6 @@ const ErrorResponse = Type.Object({
   statusCode: Type.Number()
 });
 
-const SuccessResponse = Type.Object({
-  success: Type.Boolean(),
-  message: Type.Optional(Type.String())
-});
 
 /**
  * Health check schemas
@@ -72,26 +68,10 @@ const DownloadItemQuery = Type.Object({
   path: Type.String()
 });
 
-/**
- * API Info schema
- */
-const ApiInfoResponse = Type.Object({
-  message: Type.String(),
-  version: Type.String(),
-  endpoints: Type.Object({
-    health: Type.String(),
-    system: Type.String(),
-    list: Type.String(),
-    file: Type.String(),
-    download: Type.String(),
-    docs: Type.String()
-  })
-});
 
 module.exports = {
   // Common
   ErrorResponse,
-  SuccessResponse,
 
   // Health
   HealthResponse,
@@ -103,8 +83,5 @@ module.exports = {
   ListDirectoryResponse,
   GetFileContentQuery,
   GetFileContentResponse,
-  DownloadItemQuery,
-
-  // API Info
-  ApiInfoResponse
+  DownloadItemQuery
 };

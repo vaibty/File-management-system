@@ -6,18 +6,31 @@ const config = require('./config/config');
  * Create and configure Fastify application
  */
 const createApp = async (dataDir) => {
-  const app = fastify({
-    logger: {
-      level: config.server.environment === 'production' ? 'info' : 'debug',
-      transport: config.server.environment === 'development' ? {
+  // Configure logger based on environment
+  const loggerConfig = {
+    level: config.server.environment === 'production' ? 'info' : 'debug'
+  };
+
+  // Only use pino-pretty in development and if it's available
+  if (config.server.environment === 'development' && process.env.NODE_ENV !== 'production') {
+    try {
+      require.resolve('pino-pretty');
+      loggerConfig.transport = {
         target: 'pino-pretty',
         options: {
           colorize: true,
           translateTime: 'HH:MM:ss Z',
           ignore: 'pid,hostname'
         }
-      } : undefined
-    },
+      };
+    } catch (e) {
+      // pino-pretty not available, use default logger
+      console.log('pino-pretty not available, using default logger');
+    }
+  }
+
+  const app = fastify({
+    logger: loggerConfig,
     bodyLimit: config.security.maxFileSize,
     trustProxy: true
   });

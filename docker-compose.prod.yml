@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     image: vaibty/file-management-backend:latest
@@ -16,12 +18,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - file-management-network
 
   frontend:
     image: vaibty/file-management-frontend:latest
     container_name: file-management-frontend
     ports:
-      - "4200:80"
+      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -32,7 +36,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - file-management-network
 
 volumes:
   backend_data:
     driver: local
+
+networks:
+  file-management-network:
+    driver: bridge
