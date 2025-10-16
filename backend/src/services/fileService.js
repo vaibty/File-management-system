@@ -192,11 +192,25 @@ class FileService {
   async _downloadDirectory(fullPath, itemName, reply) {
     const archive = archiver('zip', { zlib: { level: 9 } });
 
+    // Set headers for zip download
     reply.header('Content-Disposition', `attachment; filename="${itemName}.zip"`);
     reply.header('Content-Type', 'application/zip');
 
-    archive.pipe(reply.raw);
+    // Handle archive events
+    archive.on('error', (err) => {
+      console.error('Archive error:', err);
+      reply.code(500).send({ error: 'Failed to create archive' });
+    });
+
+    archive.on('end', () => {
+      console.log('Archive finalized');
+    });
+
+    // Add directory to archive
     archive.directory(fullPath, itemName);
+
+    // Pipe archive to response and finalize
+    archive.pipe(reply.raw);
     await archive.finalize();
   }
 }

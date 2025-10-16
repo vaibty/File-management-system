@@ -1,6 +1,6 @@
-# Test Report Dashboard
+# File Management System
 
-A unified, user-friendly interface for browsing and interacting with test logs and results from internal testing pipelines. This full-stack application provides a file system browser-like experience for navigating through fabricated test data, viewing file contents, and downloading files or directories.
+A unified, user-friendly interface for browsing and interacting with files and directories. This full-stack application provides a file system browser-like experience for navigating through file structures, viewing file contents, and downloading files or directories as ZIP archives.
 
 ## Table of Contents
 
@@ -20,14 +20,14 @@ A unified, user-friendly interface for browsing and interacting with test logs a
 
 ## Project Overview
 
-The Test Report Dashboard addresses the challenge of accessing and analyzing test logs and results from internal testing pipelines. Currently, this data is difficult to access, slowing down debugging and analysis processes. This project centralizes this information, making it easily searchable and viewable through a simple web application.
+The File Management System addresses the challenge of accessing and managing files and directories through a web interface. This project provides an intuitive file browser experience, making it easy to navigate file structures, view file contents, and download files or entire directories as ZIP archives.
 
 ### Core Objectives
 
-- **Centralized Access**: Provide a single interface for all test pipeline results
+- **Centralized Access**: Provide a single interface for file and directory management
 - **User-Friendly Navigation**: Implement intuitive file system browser functionality
-- **Efficient Data Retrieval**: Enable quick access to specific test logs and results
-- **Download Capabilities**: Support downloading individual files or entire directories
+- **Efficient Data Retrieval**: Enable quick access to files and directory contents
+- **Download Capabilities**: Support downloading individual files or entire directories as ZIP archives
 - **Responsive Design**: Ensure optimal experience across different devices
 
 ## Features
@@ -46,7 +46,7 @@ The Test Report Dashboard addresses the challenge of accessing and analyzing tes
 - **TypeBox Validation**: JSON Schema validation for request/response data
 - **Swagger/OpenAPI Documentation**: Interactive API documentation at `/api/docs`
 - **Modular Architecture**: Separate route files for better organization
-- **Fabricated File System**: Creates realistic test data structure on startup
+- **Static File System**: Creates sample data structure on startup
 - **RESTful API**: Well-structured endpoints for all frontend operations
 - **File Operations**: Support for listing, reading, and downloading files/directories
 - **Error Handling**: Comprehensive error handling with custom error classes
@@ -129,8 +129,8 @@ The application follows a microservices architecture with clear separation of co
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd test-report-dashboard
+   git clone https://github.com/vaibty/File-management-system.git
+   cd File-management-system
    ```
 
 2. **Start the application**:
@@ -209,15 +209,15 @@ Lists the contents of a specified directory.
 [
   {
     "isFolder": true,
-    "name": "mitLogs",
-    "path": "/mitLogs",
+    "name": "static-files",
+    "path": "/static-files",
     "size": 0,
     "modified": "2024-01-15T10:30:00.000Z"
   },
   {
     "isFolder": false,
-    "name": "service_status",
-    "path": "/test_results/service_status",
+    "name": "metrics.csv",
+    "path": "/static-files/data/metrics.csv",
     "size": 1024,
     "modified": "2024-01-15T10:30:00.000Z"
   }
@@ -226,7 +226,7 @@ Lists the contents of a specified directory.
 
 **Example**:
 ```bash
-curl "http://localhost:3001/api/list?path=/mitLogs"
+curl "http://localhost:3001/api/list?path=/static-files"
 ```
 
 #### 2. Get File Content
@@ -241,7 +241,7 @@ Retrieves the content of a specified file as plain text.
 
 **Example**:
 ```bash
-curl "http://localhost:3001/api/file?path=/test_results/service_status"
+curl "http://localhost:3001/api/file?path=/static-files/data/metrics.csv"
 ```
 
 #### 3. Download File or Directory
@@ -259,10 +259,10 @@ Downloads a file or directory (as ZIP archive).
 **Example**:
 ```bash
 # Download a file
-curl -O "http://localhost:3001/api/download?path=/test_results/service_status"
+curl -O "http://localhost:3001/api/download?path=/static-files/data/metrics.csv"
 
 # Download a directory
-curl -O "http://localhost:3001/api/download?path=/mitLogs"
+curl -O "http://localhost:3001/api/download?path=/static-files"
 ```
 
 #### 4. Health Check
@@ -584,11 +584,11 @@ Each route file is organized by controller functionality, making the codebase mo
 
 ### Technical Implementation Decisions
 
-#### 1. Fabricated File System
-**Decision**: Create realistic test data on startup
+#### 1. Sample File System
+**Decision**: Create sample data structure on startup
 **Rationale**:
 - Demonstrates real-world usage patterns
-- Provides consistent test environment
+- Provides consistent sample environment
 - Eliminates external dependencies
 - Enables comprehensive testing
 
@@ -718,4 +718,4 @@ For support and questions:
 
 ---
 
-**Test Report Dashboard** - Simplifying test log access and analysis for development teams.
+**File Management System** - Simplifying file access and management for development teams.
