@@ -100,8 +100,21 @@ async function fileRoutes(fastify, options) {
       querystring: DownloadItemQuery,
       response: {
         200: {
-          type: 'string',
-          format: 'binary'
+          description: 'File or directory download',
+          content: {
+            'application/octet-stream': {
+              schema: {
+                type: 'string',
+                format: 'binary'
+              }
+            },
+            'application/zip': {
+              schema: {
+                type: 'string',
+                format: 'binary'
+              }
+            }
+          }
         },
         400: ErrorResponse,
         404: ErrorResponse,
