@@ -100,8 +100,34 @@ async function fileRoutes(fastify, options) {
       querystring: DownloadItemQuery,
       response: {
         200: {
-          type: 'string',
-          format: 'binary'
+          description: 'File or directory download',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  itemName: { type: 'string' },
+                  isDirectory: { type: 'boolean' },
+                  size: { type: 'number' },
+                  downloadUrl: { type: 'string' },
+                  instructions: { type: 'string' }
+                }
+              }
+            },
+            'application/zip': {
+              schema: {
+                type: 'string',
+                format: 'binary'
+              }
+            },
+            'application/octet-stream': {
+              schema: {
+                type: 'string',
+                format: 'binary'
+              }
+            }
+          }
         },
         400: ErrorResponse,
         404: ErrorResponse,
@@ -119,6 +145,39 @@ async function fileRoutes(fastify, options) {
         });
       }
 
+      // Check if the request is from Swagger UI (accepts JSON)
+      const acceptHeader = request.headers.accept || '';
+      const isSwaggerRequest = acceptHeader.includes('application/json');
+
+      if (isSwaggerRequest) {
+        // For Swagger UI, return a JSON response with download information
+        const fs = require('fs-extra');
+        const path = require('path');
+        const { dataDir } = options;
+        const fullPath = path.join(dataDir, itemPath);
+
+        if (!await fs.pathExists(fullPath)) {
+          return reply.status(404).send({
+            error: 'Item not found',
+            message: `Path ${itemPath} does not exist`,
+            statusCode: 404
+          });
+        }
+
+        const stats = await fs.stat(fullPath);
+        const itemName = path.basename(itemPath);
+
+        return reply.send({
+          message: 'Download available',
+          itemName: itemName,
+          isDirectory: stats.isDirectory(),
+          size: stats.size,
+          downloadUrl: `/api/download?path=${encodeURIComponent(itemPath)}`,
+          instructions: 'Use the downloadUrl to download the file/directory. For directories, it will be downloaded as a zip file.'
+        });
+      }
+
+      // For regular requests, proceed with actual download
       await fileController.downloadItem(itemPath, reply);
     } catch (error) {
       fastify.log.error('Download item error:', error);

@@ -177,8 +177,32 @@ class FileService {
    * @param {Object} reply - Fastify reply object
    */
   async _downloadFile(fullPath, itemName, reply) {
+    // Get file extension to determine content type
+    const ext = path.extname(itemName).toLowerCase();
+    let contentType = 'application/octet-stream';
+
+    // Set appropriate content type based on file extension
+    const contentTypes = {
+      '.zip': 'application/zip',
+      '.json': 'application/json',
+      '.txt': 'text/plain',
+      '.md': 'text/markdown',
+      '.csv': 'text/csv',
+      '.yaml': 'application/x-yaml',
+      '.yml': 'application/x-yaml',
+      '.sh': 'text/plain',
+      '.js': 'application/javascript',
+      '.ts': 'application/typescript',
+      '.html': 'text/html',
+      '.css': 'text/css'
+    };
+
+    if (contentTypes[ext]) {
+      contentType = contentTypes[ext];
+    }
+
     reply.header('Content-Disposition', `attachment; filename="${itemName}"`);
-    reply.header('Content-Type', 'application/octet-stream');
+    reply.header('Content-Type', contentType);
     return reply.send(fs.createReadStream(fullPath));
   }
 
