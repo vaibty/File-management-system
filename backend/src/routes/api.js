@@ -19,7 +19,7 @@ async function setupApiRoutes(fastify, options) {
 
   // Register route modules with their dependencies
   await fastify.register(healthRoutes, { healthController });
-  await fastify.register(fileRoutes, { fileController, dataDir });
+  await fastify.register(fileRoutes, { fileController });
 }
 
 module.exports = setupApiRoutes;
