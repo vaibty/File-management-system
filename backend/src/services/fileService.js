@@ -159,6 +159,10 @@ class FileService {
       const stats = await fs.stat(fullPath);
       const itemName = path.basename(itemPath);
 
+      // Set common headers for all downloads
+      reply.header('Cache-Control', 'no-cache');
+      reply.header('Pragma', 'no-cache');
+
       if (stats.isFile()) {
         await this._downloadFile(fullPath, itemName, reply);
       } else {
@@ -177,8 +181,37 @@ class FileService {
    * @param {Object} reply - Fastify reply object
    */
   async _downloadFile(fullPath, itemName, reply) {
-    reply.header('Content-Disposition', `attachment; filename="${itemName}"`);
-    reply.header('Content-Type', 'application/octet-stream');
+    const ext = path.extname(itemName).toLowerCase();
+    let contentType = 'application/octet-stream';
+
+    // Set appropriate content type based on file extension
+    const contentTypes = {
+      '.txt': 'text/plain',
+      '.json': 'application/json',
+      '.csv': 'text/csv',
+      '.md': 'text/markdown',
+      '.yaml': 'application/x-yaml',
+      '.yml': 'application/x-yaml',
+      '.xml': 'application/xml',
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'application/javascript',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.pdf': 'application/pdf',
+      '.zip': 'application/zip'
+    };
+
+    if (contentTypes[ext]) {
+      contentType = contentTypes[ext];
+    }
+
+    // Set headers on the raw response object
+    reply.raw.setHeader('Content-Disposition', `attachment; filename="${itemName}"`);
+    reply.raw.setHeader('Content-Type', contentType);
+    reply.code(200);
     return reply.send(fs.createReadStream(fullPath));
   }
 
@@ -192,9 +225,10 @@ class FileService {
   async _downloadDirectory(fullPath, itemName, reply) {
     const archive = archiver('zip', { zlib: { level: 9 } });
 
-    // Set headers for zip download
-    reply.header('Content-Disposition', `attachment; filename="${itemName}.zip"`);
-    reply.header('Content-Type', 'application/zip');
+    // Set headers on the raw response object
+    reply.raw.setHeader('Content-Disposition', `attachment; filename="${itemName}.zip"`);
+    reply.raw.setHeader('Content-Type', 'application/zip');
+    reply.raw.setHeader('Content-Transfer-Encoding', 'binary');
 
     // Handle archive events
     archive.on('error', (err) => {
@@ -209,7 +243,8 @@ class FileService {
     // Add directory to archive
     archive.directory(fullPath, itemName);
 
-    // Pipe archive to response and finalize
+    // Set the response code and pipe archive to response
+    reply.code(200);
     archive.pipe(reply.raw);
     await archive.finalize();
   }
